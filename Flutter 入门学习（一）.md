@@ -1,6 +1,6 @@
 # 1. Android 中控件与Flutter中控件的对应替换关系
 
-![image-20191115231053587](/Users/cailei/Library/Application Support/typora-user-images/image-20191115231053587.png)
+![image-20191115231053587](https://tva1.sinaimg.cn/large/006y8mN6gy1g99a5zfqm4j31bw0g0q8o.jpg)
 
 # 2. 搭建Flutter环境
 
@@ -8,11 +8,11 @@
 
 # 3. Dart基础-数字类型
 
-![image-20191117174029006](/Users/cailei/Library/Application Support/typora-user-images/image-20191117174029006.png)
+![image-20191117174029006](https://tva1.sinaimg.cn/large/006y8mN6gy1g99a63mcftj30zw0f676u.jpg)
 
 # 4. Dart字符串类型
 
-![image-20191117175007563](/Users/cailei/Library/Application Support/typora-user-images/image-20191117175007563.png)
+![image-20191117175007563](https://tva1.sinaimg.cn/large/006y8mN6gy1g99a66ugo2j30wk0d8go4.jpg)
 
 # 5. Dart list(集合)的基本使用
 
