@@ -249,3 +249,98 @@
 
 答案是出不来效果的。因为默认的viewGroup 不会调用 onDraw()方法。分析源码：
 
+## View.java 
+
+~~~java
+public void draw(Canvas canvas) {
+        final int privateFlags = mPrivateFlags;
+        final boolean dirtyOpaque = (privateFlags & PFLAG_DIRTY_MASK) == PFLAG_DIRTY_OPAQUE &&
+                (mAttachInfo == null || !mAttachInfo.mIgnoreDirtyState);
+        mPrivateFlags = (privateFlags & ~PFLAG_DIRTY_MASK) | PFLAG_DRAWN;
+
+        /*
+         * Draw traversal performs several drawing steps which must be executed
+         * in the appropriate order:
+         *
+         *      1. Draw the background
+         *      2. If necessary, save the canvas' layers to prepare for fading
+         *      3. Draw view's content
+         *      4. Draw children
+         *      5. If necessary, draw the fading edges and restore layers
+         *      6. Draw decorations (scrollbars for instance)
+         */
+
+        // Step 1, draw the background, if needed
+        int saveCount;
+
+        if (!dirtyOpaque) {
+            drawBackground(canvas);
+        }
+
+        // skip step 2 & 5 if possible (common case)
+        final int viewFlags = mViewFlags;
+        boolean horizontalEdges = (viewFlags & FADING_EDGE_HORIZONTAL) != 0;
+        boolean verticalEdges = (viewFlags & FADING_EDGE_VERTICAL) != 0;
+        if (!verticalEdges && !horizontalEdges) {
+            // Step 3, draw the content
+            if (!dirtyOpaque) onDraw(canvas);
+
+            // Step 4, draw the children
+            dispatchDraw(canvas);
+
+            // Overlay is part of the content and draws beneath Foreground
+            if (mOverlay != null && !mOverlay.isEmpty()) {
+                mOverlay.getOverlayView().dispatchDraw(canvas);
+
+~~~
+
+由元源码可以看出 ：只有当dirtyOpaque 这个值是false 的时候 才会调用draw方法
+
+~~~java
+final boolean dirtyOpaque = (privateFlags & PFLAG_DIRTY_MASK) == PFLAG_DIRTY_OPAQUE &&
+                (mAttachInfo == null || !mAttachInfo.mIgnoreDirtyState);
+~~~
+
+privateFlags->mPrivateFlags  mPrivateFlags 到底是怎么赋值的？在View的构造函数中最后一行调用computeOpaqueFlages()：
+
+~~~java
+  computeOpaqueFlags();
+  protected void computeOpaqueFlags() {
+        // Opaque if:
+        //   - Has a background
+        //   - Background is opaque
+        //   - Doesn't have scrollbars or scrollbars overlay
+
+        if (mBackground != null && mBackground.getOpacity() == PixelFormat.OPAQUE) {
+            mPrivateFlags |= PFLAG_OPAQUE_BACKGROUND;
+        } else {
+            mPrivateFlags &= ~PFLAG_OPAQUE_BACKGROUND;
+        }
+
+        final int flags = mViewFlags;
+        if (((flags & SCROLLBARS_VERTICAL) == 0 && (flags & SCROLLBARS_HORIZONTAL) == 0) ||
+                (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_INSIDE_OVERLAY ||
+                (flags & SCROLLBARS_STYLE_MASK) == SCROLLBARS_OUTSIDE_OVERLAY) {
+            mPrivateFlags |= PFLAG_OPAQUE_SCROLLBARS;
+        } else {
+            mPrivateFlags &= ~PFLAG_OPAQUE_SCROLLBARS;
+        }
+    }
+~~~
+
+ViewGroup为啥出不来：
+
+~~~java
+private void initViewGroup() {
+        // ViewGroup doesn't draw by default
+        if (!debugDraw()) {
+            setFlags(WILL_NOT_DRAW, DRAW_MASK);
+        }
+  导致mPrivateFlags 重新赋值      
+~~~
+
+解决方法：
+
+1. onDraw 改为dispatchDraw
+2. 默认给个透明的背景 setBackground
+3. setWillNotDraw()
